@@ -17,13 +17,13 @@
 int status = WL_IDLE_STATUS;
 //#include "arduino_secrets.h" 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-// char ssid[] = "PLC";        // your network SSID (name)
-// char pass[] = "abcdef123!";    // your network password (use for WPA, or use as key for WEP)
-// int keyIndex = 0;            // your network key index number (needed only for WEP)
+char ssid[] = "PLC";        // your network SSID (name)
+char pass[] = "abcdef123!";    // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0;            // your network key index number (needed only for WEP)
 
-char ssid[] = "65DW3";        // your network SSID (name)
-char pass[] = "abcDEF123!";    // your network password (use for WPA, or use as key for WEP)
-int keyIndex = 0;  
+// char ssid[] = "65DW3";        // your network SSID (name)
+// char pass[] = "abcDEF123!";    // your network password (use for WPA, or use as key for WEP)
+// int keyIndex = 0;  
 
 unsigned int localPort = 2390;      // local port to listen on
 
@@ -32,8 +32,8 @@ char  ReplyBuffer[] = "acknowledged\n";       // a string to send back
 
 WiFiUDP Udp;
 
-//IPAddress ip(192,168,0,57);
-IPAddress ip(192,168,168,207);
+IPAddress ip(192,168,0,57);
+//IPAddress ip(192,168,168,207);
 
 void setupWiFi(){
 // check for the WiFi module:
@@ -79,7 +79,10 @@ void setup() {
 }
 
 void loop() {
+  handleUDPPackets();
+}
 
+void handleUDPPackets(){
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
   if (packetSize) {
