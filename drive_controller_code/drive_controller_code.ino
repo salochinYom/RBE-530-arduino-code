@@ -13,6 +13,7 @@
 
 
 #include <WiFiS3.h>
+#include <Servo.h>
 
 int status = WL_IDLE_STATUS;
 //#include "arduino_secrets.h" 
@@ -29,6 +30,15 @@ WiFiUDP Udp;
 
 IPAddress ip(192,168,0,57);
 //IPAddress ip(192,168,168,207);
+
+//drive motors
+#define MT1 5
+#define MT2 6
+
+//steering servo
+#define SteeringPin 9
+
+Servo servo;
 
 unsigned int localPort = 2390;      // local port to listen on
 
@@ -74,18 +84,35 @@ void setupWiFi(){
   Udp.begin(localPort);
 }
 
+void setupHardware(){
+  //pins
+  pinMode(MT1, OUTPUT);
+  pinMode(MT2, OUTPUT);
+
+  //add the servo
+  servo.attach(SteeringPin);
+}
+
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(115200);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  // while (!Serial) {
+  //   ; // wait for serial port to connect. Needed for native USB port only
+  // }
   setupWiFi();
+  setupHardware();
 }
 
 void loop() {
   handleUDPPackets();
   delay(1);
+  updateHardware();
+}
+
+void updateHardware(){
+  analogWrite(MT1, mt1);  // turn the LED on (HIGH is the voltage level)
+  analogWrite(MT2, mt2);
+  servo.write(steer);
 }
 
 void handleUDPPackets(){
