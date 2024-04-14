@@ -25,15 +25,20 @@ int keyIndex = 0;            // your network key index number (needed only for W
 // char pass[] = "abcDEF123!";    // your network password (use for WPA, or use as key for WEP)
 // int keyIndex = 0;  
 
+WiFiUDP Udp;
+
+IPAddress ip(192,168,0,57);
+//IPAddress ip(192,168,168,207);
+
 unsigned int localPort = 2390;      // local port to listen on
 
 char packetBuffer[256]; //buffer to hold incoming packet
 char  ReplyBuffer[] = "acknowledged\n";       // a string to send back
 
-WiFiUDP Udp;
-
-IPAddress ip(192,168,0,57);
-//IPAddress ip(192,168,168,207);
+//keeps track of the states for the outputs
+unsigned int steer = 90;
+unsigned int mt1 = 0;
+unsigned int mt2 = 0;
 
 void setupWiFi(){
 // check for the WiFi module:
@@ -80,38 +85,45 @@ void setup() {
 
 void loop() {
   handleUDPPackets();
+  delay(1);
 }
 
 void handleUDPPackets(){
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
   if (packetSize) {
-    // Serial.print("Received packet of size ");
-    // Serial.println(packetSize);
-    // Serial.print("From ");
-    // IPAddress remoteIp = Udp.remoteIP();
-    // Serial.print(remoteIp);
-    // Serial.print(", port ");
-    // Serial.println(Udp.remotePort());
 
     // read the packet into packetBuffer
     int len = Udp.read(packetBuffer, 255);
     if (len > 0) {
       packetBuffer[len] = 0;
     }
-    Serial.println("Contents:");
-    Serial.println(packetBuffer);
-    //convert the message into a number
-    Serial.println("int: ");
-    Serial.println(bufToInt(packetBuffer));
-    Serial.println("");
-
-
-    // send a reply, to the IP address that sent us the packet we received
+    //get the message prefix
+    char prefix[] = {packetBuffer[0], packetBuffer[1], packetBuffer[2], packetBuffer[3]};
     
-    // Udp.beginPacket(Udp.remoteIP(), localPort);
-    // Udp.write(ReplyBuffer);
-    // Udp.endPacket();
+    //put the info into the correct buffer based on its prefix
+    if (strcmp(prefix, "STR=") == 0){
+      steer = bufToInt(packetBuffer);
+    }
+    else if(strcmp(prefix, "MT1=") == 0){
+      mt1 = bufToInt(packetBuffer);
+    }
+    else if(strcmp(prefix, "MT2=") == 0){
+      mt2 = bufToInt(packetBuffer);
+    }
+    else{
+      Serial.print("bad packet: ");
+      Serial.println(packetBuffer);
+    }
+
+    //print the statistics
+    Serial.print("str = ");
+    Serial.println(steer);
+    Serial.print("mt1 = ");
+    Serial.println(mt1);
+    Serial.print("mt2 = ");
+    Serial.println(mt2);
+    Serial.println("");
   }
 }
 
