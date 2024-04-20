@@ -38,6 +38,9 @@ IPAddress ip(192,168,0,57);
 //steering servo
 #define SteeringPin 9
 
+//status led
+#define STATUS_LED 13
+
 Servo servo;
 
 unsigned int localPort = 2390;      // local port to listen on
@@ -88,9 +91,13 @@ void setupHardware(){
   //pins
   pinMode(MT1, OUTPUT);
   pinMode(MT2, OUTPUT);
+  pinMode(STATUS_LED, OUTPUT);
 
   //add the servo
   servo.attach(SteeringPin);
+
+  //indicate that the system is ready
+  digitalWrite(STATUS_LED, HIGH);
 }
 
 void setup() {
