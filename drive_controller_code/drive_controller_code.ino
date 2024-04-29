@@ -41,6 +41,11 @@ IPAddress ip(192,168,0,57);
 //status led
 #define STATUS_LED 13
 
+//autonomous settings
+#define AUTO1SPEED 255
+#define AUTO2SPEED 255
+#define AUTOSTEER 90
+
 Servo servo;
 
 unsigned int localPort = 2390;      // local port to listen on
@@ -52,6 +57,10 @@ char  ReplyBuffer[] = "acknowledged\n";       // a string to send back
 unsigned int steer = 90;
 unsigned int mt1 = 0;
 unsigned int mt2 = 0;
+
+//keeps track of auto
+int prevAUTO = 0;
+bool autoState = false;
 
 void setupWiFi(){
 // check for the WiFi module:
@@ -136,18 +145,41 @@ void handleUDPPackets(){
     char prefix[] = {packetBuffer[0], packetBuffer[1], packetBuffer[2], packetBuffer[3]};
     
     //put the info into the correct buffer based on its prefix
-    if (strcmp(prefix, "STR=") == 0){
-      steer = bufToInt(packetBuffer);
+    //for autonomous
+    //set the value.
+    if(strcmp(prefix, "AUT=") == 0){
+        //get the interger
+        int currentState = bufToInt(packetBuffer);
+        //on the falling edge chage the state.
+        if((currentState == 0) && (prevAUTO == 1)){
+          autoState = !autoState;
+        }
+        //set previous state
+        prevAUTO = currentState;
     }
-    else if(strcmp(prefix, "MT1=") == 0){
-      mt1 = bufToInt(packetBuffer);
+
+
+    //if in auto
+    if(autoState){
+      steer = AUTOSTEER;
+      mt1 = AUTO1SPEED;
+      mt2 = AUTO2SPEED;
     }
-    else if(strcmp(prefix, "MT2=") == 0){
-      mt2 = bufToInt(packetBuffer);
-    }
+    //if in manual mode
     else{
-      Serial.print("bad packet: ");
-      Serial.println(packetBuffer);
+      if (strcmp(prefix, "STR=") == 0){
+        steer = bufToInt(packetBuffer);
+      }
+      else if(strcmp(prefix, "MT1=") == 0){
+        mt1 = bufToInt(packetBuffer);
+      }
+      else if(strcmp(prefix, "MT2=") == 0){
+        mt2 = bufToInt(packetBuffer);
+      }
+      else{
+        Serial.print("bad packet: ");
+        Serial.println(packetBuffer);
+      }
     }
 
     //print the statistics
@@ -157,6 +189,8 @@ void handleUDPPackets(){
     Serial.println(mt1);
     Serial.print("mt2 = ");
     Serial.println(mt2);
+    Serial.print("aut = ");
+    Serial.println(autoState);
     Serial.println("");
   }
 }
